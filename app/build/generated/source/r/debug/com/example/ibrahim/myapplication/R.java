@@ -941,14 +941,15 @@ containing a value of this type.
         public static final int action_menu_divider=0x7f070015;
         public static final int action_menu_presenter=0x7f070016;
         public static final int action_mode_close_button=0x7f070024;
-        public static final int action_settings=0x7f070042;
+        public static final int action_settings=0x7f070043;
         public static final int activity_chooser_view_content=0x7f070025;
         public static final int always=0x7f07000f;
         public static final int beginning=0x7f07000a;
         public static final int btnBToff=0x7f07003e;
         public static final int btnBTon=0x7f07003d;
         public static final int btnBlue=0x7f07003c;
-        public static final int btnSearch=0x7f070041;
+        public static final int btnList=0x7f070042;
+        public static final int btnVisible=0x7f070041;
         public static final int checkbox=0x7f07002d;
         public static final int collapseActionView=0x7f070011;
         public static final int default_activity_button=0x7f070028;

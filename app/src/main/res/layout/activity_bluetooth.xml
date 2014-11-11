@@ -46,10 +46,20 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Sök "
-        android:id="@+id/btnSearch"
+        android:text="Visible"
+        android:id="@+id/btnVisible"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="List"
+        android:id="@+id/btnList"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/btnVisible"
+        android:layout_toStartOf="@+id/btnVisible" />
 
 </RelativeLayout>
