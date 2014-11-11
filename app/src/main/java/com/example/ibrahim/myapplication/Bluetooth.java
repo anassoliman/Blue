@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -24,6 +25,8 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
     Button btnBTon, btnBToff, btnSearch;
     ListView listofdevicesview;
     ArrayAdapter<String> listAdapter;
+    IntentFilter filter;
+    BroadcastReceiver mReceiver;
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
     @Override
@@ -44,7 +47,51 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
         listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, 0);
         listofdevicesview.setAdapter(listAdapter);
 
+        filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+           mReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
 
+
+                String action = intent.getAction();
+                if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    listAdapter.add(device.getName() + "\n" + device.getAddress());
+                }
+                else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action))
+                {
+
+                }else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action))
+                {
+
+                }else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action))
+                {
+                    if(mBluetoothAdapter.getState()== mBluetoothAdapter.STATE_OFF){
+                        TurnOnBT();
+                    }
+
+                }
+            }
+        };
+
+        // Register the BroadcastReceiver
+
+        registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
+
+         filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        registerReceiver(mReceiver, filter);
+
+         filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        registerReceiver(mReceiver, filter);
+
+        filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(mReceiver, filter);
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mReceiver);
     }
 
 
@@ -67,19 +114,6 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
         return super.onOptionsItemSelected(item);
     }
 
-    private final BroadcastReceiver mReviever = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-
-            String action = intent.getAction();
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                listAdapter.add(device.getName() + "\n" + device.getAddress());
-            }
-        }
-    };
 
 
     @Override
@@ -98,8 +132,7 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
                 } else {
                     if (!mBluetoothAdapter.isEnabled()) {
 
-                        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                        startActivityForResult(enableBtIntent, 1);
+                       TurnOnBT();
                     }
                 }
                 // Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.get
@@ -127,7 +160,7 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
 
                 if (mBluetoothAdapter.isEnabled()) {
                     Toast.makeText(getApplicationContext(), "Bluetooth off", Toast.LENGTH_SHORT).show();
-                    mBluetoothAdapter.disable();
+                  TurnoffBT();
                 } else {
                     Toast.makeText(getApplicationContext(), "Bluetooth is already off", Toast.LENGTH_SHORT).show();
                 }
@@ -144,5 +177,15 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
         }
 
 
+    }
+
+    private void TurnoffBT() {
+        mBluetoothAdapter.disable();
+    }
+
+    private void TurnOnBT() {
+
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBtIntent, 1);
     }
 }
