@@ -2,7 +2,10 @@ package com.example.ibrahim.myapplication;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 
@@ -23,10 +26,9 @@ import java.util.Set;
 
 public class Bluetooth extends ActionBarActivity implements View.OnClickListener {
 
-    Button btnBTon, btnBToff, btnVisible, btnList;
+    Button btnBTon, btnBToff, btnVisible, btnList, btnSearch;
     ListView listViewOfDevices;
-
-
+    private ArrayAdapter<String> BTArrayAdapter;
     private Set<BluetoothDevice> pairedDevices;
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -47,7 +49,13 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
         btnList = (Button) findViewById(R.id.btnList);
         btnList.setOnClickListener(this);
 
+        btnSearch = (Button) findViewById(R.id.btnSearch);
+        btnSearch.setOnClickListener(this);
+
         listViewOfDevices = (ListView) findViewById(R.id.listofdevicesview);
+
+         BTArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+        listViewOfDevices.setAdapter(BTArrayAdapter);
 
 
     }
@@ -121,12 +129,49 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
                 getPairedDevices();
 
                 break;
+            case R.id.btnSearch:
+
+                SearchDevices();
+                break;
             default:
                 break;
 
         }
 
 
+    }
+
+    final BroadcastReceiver bReceiver = new BroadcastReceiver() {
+
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            // When discovery finds a device
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Get the BluetoothDevice object from the Intent
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                // add the name and the MAC address of the object to the arrayAdapter
+                BTArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+                BTArrayAdapter.notifyDataSetChanged();
+            }
+        }
+
+    };
+
+
+    private void SearchDevices() {
+
+
+        if (mBluetoothAdapter.isDiscovering()) {
+            // the button is pressed when it discovers, so cancel the discovery
+            mBluetoothAdapter.cancelDiscovery();
+        } else {
+            BTArrayAdapter.clear();
+            mBluetoothAdapter.startDiscovery();
+
+            registerReceiver(bReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
+        }
     }
 
     private void Visible() {
@@ -141,14 +186,14 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
 
         pairedDevices = mBluetoothAdapter.getBondedDevices();
 
-        ArrayList list = new ArrayList();
+
         for (BluetoothDevice bt : pairedDevices)
-            list.add(bt.getName());
+            BTArrayAdapter.add(bt.getName());
 
         Toast.makeText(getApplicationContext(), "Showing Paired Devices",
                 Toast.LENGTH_SHORT).show();
-        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, list);
-        listViewOfDevices.setAdapter(adapter);
+       // BTArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+        //listViewOfDevices.setAdapter(BTArrayAdapter);
 
 
     }
@@ -164,5 +209,12 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
         //Sätter på bluetooth
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBtIntent, 1);
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        super.onDestroy();
+        unregisterReceiver(bReceiver);
     }
 }
