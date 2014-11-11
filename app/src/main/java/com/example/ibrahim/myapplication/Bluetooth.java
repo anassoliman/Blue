@@ -24,7 +24,7 @@ import java.util.Set;
 public class Bluetooth extends ActionBarActivity implements View.OnClickListener {
 
     Button btnBTon, btnBToff, btnVisible, btnList;
-    ListView listofdevicesview;
+    ListView listViewOfDevices;
 
 
     private Set<BluetoothDevice> pairedDevices;
@@ -47,7 +47,7 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
         btnList = (Button) findViewById(R.id.btnList);
         btnList.setOnClickListener(this);
 
-        listofdevicesview = (ListView) findViewById(R.id.listofdevicesview);
+        listViewOfDevices = (ListView) findViewById(R.id.listofdevicesview);
 
 
     }
@@ -130,13 +130,14 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
     }
 
     private void Visible() {
+        //Gör enheten synlig
         Intent getVisible = new Intent(BluetoothAdapter.
                 ACTION_REQUEST_DISCOVERABLE);
         startActivityForResult(getVisible, 0);
     }
 
     private void getPairedDevices() {
-
+        // ger dig enheterna som är kopplade eller var kopplade.
 
         pairedDevices = mBluetoothAdapter.getBondedDevices();
 
@@ -147,20 +148,20 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
         Toast.makeText(getApplicationContext(), "Showing Paired Devices",
                 Toast.LENGTH_SHORT).show();
         ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, list);
-        listofdevicesview.setAdapter(adapter);
+        listViewOfDevices.setAdapter(adapter);
 
 
     }
-
 
 
     private void TurnoffBT() {
 
+        //Stänger av bluetooth
         mBluetoothAdapter.disable();
     }
 
     private void TurnOnBT() {
-
+        //Sätter på bluetooth
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBtIntent, 1);
     }
