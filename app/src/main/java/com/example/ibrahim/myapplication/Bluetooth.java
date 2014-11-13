@@ -2,35 +2,39 @@ package com.example.ibrahim.myapplication;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.view.View.OnClickListener;
 
-
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Set;
+import java.util.UUID;
 
 
-public class Bluetooth extends ActionBarActivity implements View.OnClickListener {
+public class Bluetooth extends ActionBarActivity implements OnClickListener {
 
     Button btnBTon, btnBToff, btnVisible, btnList, btnSearch;
     ListView listViewOfDevices;
     private ArrayAdapter<String> BTArrayAdapter;
     private Set<BluetoothDevice> pairedDevices;
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+    public static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,10 +58,11 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
 
         listViewOfDevices = (ListView) findViewById(R.id.listofdevicesview);
 
-         BTArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+        BTArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         listViewOfDevices.setAdapter(BTArrayAdapter);
 
 
+        ClickItemList();
     }
 
     @Override
@@ -65,13 +70,6 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
         super.onPause();
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.bluetooth, menu);
-        return true;
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -151,6 +149,7 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
                 // add the name and the MAC address of the object to the arrayAdapter
                 BTArrayAdapter.add(device.getName() + "\n" + device.getAddress());
                 BTArrayAdapter.notifyDataSetChanged();
@@ -162,7 +161,7 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
 
     private void SearchDevices() {
 
-
+        Toast.makeText(getApplicationContext(), "Searching for Devices", Toast.LENGTH_LONG).show();
         if (mBluetoothAdapter.isDiscovering()) {
             // the button is pressed when it discovers, so cancel the discovery
             mBluetoothAdapter.cancelDiscovery();
@@ -179,6 +178,7 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
         Intent getVisible = new Intent(BluetoothAdapter.
                 ACTION_REQUEST_DISCOVERABLE);
         startActivityForResult(getVisible, 0);
+        Toast.makeText(getApplicationContext(), "Making Device visible", Toast.LENGTH_SHORT).show();
     }
 
     private void getPairedDevices() {
@@ -192,12 +192,9 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
 
         Toast.makeText(getApplicationContext(), "Showing Paired Devices",
                 Toast.LENGTH_SHORT).show();
-       // BTArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-        //listViewOfDevices.setAdapter(BTArrayAdapter);
 
 
     }
-
 
     private void TurnoffBT() {
 
@@ -217,4 +214,70 @@ public class Bluetooth extends ActionBarActivity implements View.OnClickListener
         super.onDestroy();
         unregisterReceiver(bReceiver);
     }
+
+
+    private void ClickItemList() {
+        ListView list = (ListView) findViewById(R.id.listofdevicesview);
+        list.setOnItemClickListener(new OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(getApplicationContext(), "You have click device : " + position, Toast.LENGTH_SHORT).show();
+
+            }
+        });
+    }
+
+
+    private class ConnectThread extends Thread {
+        private final BluetoothSocket mmSocket;
+        private final BluetoothDevice mmDevice;
+
+        public ConnectThread(BluetoothDevice device) {
+            // Use a temporary object that is later assigned to mmSocket,
+            // because mmSocket is final
+            BluetoothSocket tmp = null;
+            mmDevice = device;
+
+            // Get a BluetoothSocket to connect with the given BluetoothDevice
+            try {
+                // MY_UUID is the app's UUID string, also used by the server code
+                tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+            } catch (IOException e) { }
+            mmSocket = tmp;
+        }
+
+        public void run() {
+            // Cancel discovery because it will slow down the connection
+            mBluetoothAdapter.cancelDiscovery();
+
+            try {
+                // Connect the device through the socket. This will block
+                // until it succeeds or throws an exception
+                mmSocket.connect();
+            } catch (IOException connectException) {
+                // Unable to connect; close the socket and get out
+                try {
+                    mmSocket.close();
+                } catch (IOException closeException) { }
+                return;
+            }
+
+            // Do work to manage the connection (in a separate thread)
+            manageConnectedSocket(mmSocket);
+        }
+
+        /** Will cancel an in-progress connection, and close the socket */
+        public void cancel() {
+            try {
+                mmSocket.close();
+            } catch (IOException e) { }
+        }
+    }
+
+    private void manageConnectedSocket(BluetoothSocket mmSocket) {
+
+    }
 }
+
+
